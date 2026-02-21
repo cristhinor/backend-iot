@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel IoT Profesional</title>
+
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>Panel IoT - Control de Consumo</h1>
+
+  <div class="nav">
+  <a href="index.html">Dashboard</a>
+  <a href="historial.html">Historial</a>
+  </div>
+
+  <div class="conexion">
+  <span id="estadoConexionTexto">Desconectado</span>
+  <div id="indicadorConexion" class="punto rojo"></div>
+  </div>
+
+  <div class="card">
+    <h2>Consumo en Tiempo Real</h2>
+    <canvas id="graficaConsumo"></canvas>
+  </div>
+
+  <div class="card control">
+    <h2>Control LED</h2>
+
+    <div id="toggleBtn" onclick="toggleLED()" class="toggle off">
+      OFF
+    </div>
+
+    <p id="estadoTexto">LED apagado</p>
+  </div>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>

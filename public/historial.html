@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de Consumo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="nav">
+  <a href="index.html">Volver al inicio</a>
+</div>
+
+<h2>Historial por Fecha</h2>
+
+<label>Desde:</label>
+<input type="datetime-local" id="fechaInicio">
+
+<label>Hasta:</label>
+<input type="datetime-local" id="fechaFin">
+
+<button onclick="filtrar()">Filtrar</button>
+<button onclick="descargarCSV()">Descargar CSV</button>
+
+<canvas id="graficaHistorial"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="historial.js"></script>
+
+</body>
+</html>
