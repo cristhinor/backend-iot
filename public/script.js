@@ -167,16 +167,15 @@ async function cargarHistorico() {
     const respuesta = await fetch("https://backend-iot-mb58.onrender.com/api/consumos");
     const datos = await respuesta.json();
 
-    // 🔥 LIMPIAR ARRAYS ANTES DE LLENAR
     etiquetasTiempo.length = 0;
     datosConsumo.length = 0;
 
-    datos.forEach(dato => {
-      const fecha = new Date(dato.timestamp).toLocaleTimeString();
-      const valor = dato.valor;
+    // Tomar solo los últimos 15 y ordenarlos del más antiguo al más reciente
+    const ultimos = datos.slice(0, 15).reverse();
 
-      etiquetasTiempo.push(fecha);
-      datosConsumo.push(valor);
+    ultimos.forEach(dato => {
+      etiquetasTiempo.push(new Date(dato.timestamp).toLocaleTimeString());
+      datosConsumo.push(dato.valor);
     });
 
     grafica.update();
