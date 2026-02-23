@@ -43,7 +43,6 @@ const grafica = new Chart(ctx, {
   }
 });
 
-cargarHistorico();
 
 // 🔹 CONEXIÓN MQTT
 /*
@@ -116,8 +115,27 @@ async function toggleLED(){
       body: JSON.stringify({ estado: nuevoEstado })
     });
 
+    estadoLED = !estadoLED;
+    actualizarUI();
+
   } catch (error) {
     console.error("Error enviando comando:", error);
+  }
+}
+
+async function cargarEstadoLED(){
+  try {
+    const res = await fetch("https://backend-iot-mb58.onrender.com/api/led");
+
+    if(res.ok){
+      estadoLED = !estadoLED;
+      actualizarUI();
+    }
+    const data = await res.json();
+
+
+  } catch (error) {
+    console.error("Error cargando estado LED:", error);
   }
 }
 
@@ -195,7 +213,7 @@ async function cargarHistorico() {
     datosConsumo.length = 0;
 
     // Tomar solo los últimos 15 y ordenarlos del más antiguo al más reciente
-    const ultimos = datos.slice(0, 15).reverse();
+    const ultimos = datos.slice(-15).reverse();
 
     ultimos.forEach(dato => {
       etiquetasTiempo.push(new Date(dato.timestamp).toLocaleTimeString());
@@ -213,6 +231,10 @@ async function cargarHistorico() {
 ========================= */
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  cargarHistorico();
+  cargarEstadoLED();
+  setInterval(cargarHistorico, 5000);
 
   const toggle = document.getElementById("theme-toggle");
 
@@ -254,6 +276,9 @@ function actualizarGraficaModoOscuro(esOscuro){
 
   grafica.options.scales.x.ticks = { color: colorTexto };
   grafica.options.scales.y.ticks = { color: colorTexto };
+ 
+  grafica.options.scales.x.grid = { color: esOscuro ? "#444" : "#ddd" };
+  grafica.options.scales.y.grid = { color: esOscuro ? "#444" : "#ddd" };
 
   grafica.options.scales.x.title.color = colorTexto;
   grafica.options.scales.y.title.color = colorTexto;

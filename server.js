@@ -24,6 +24,7 @@ app.use(express.json());
 ================================ */
 
 let mqttClient;
+let estadoLEDActual = "OFF";
 
 /* ===============================
    🔥 CONFIGURACIÓN MONGODB
@@ -93,9 +94,13 @@ function iniciarServidor() {
   });
 
   /* ===============================
-     🔥 NUEVO ENDPOINT PARA LED
+     🔥 ENDPOINT PARA LED
   ================================= */
-
+//ENDPOINT PARA CONSULTAR ESTADO DEL LED
+  app.post("/api/led", (req, res) => {
+    res.json({ estado: estadoLEDActual });
+  });
+//ENDPOINT PARA CAMBIAR ESTADO DEL LED
   app.post("/api/led", (req, res) => {
     const { estado } = req.body;
 
@@ -104,8 +109,8 @@ function iniciarServidor() {
     }
 
     mqttClient.publish("casa/led", estado);
+    estadoLEDActual = estado; // guardamos estado actual
     console.log("💡 Comando LED enviado:", estado);
-
     res.json({ mensaje: "Comando enviado correctamente" });
   });
 
