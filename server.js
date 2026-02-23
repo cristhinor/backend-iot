@@ -7,6 +7,10 @@ const mqtt = require("mqtt");
 const Consumo = require("./models/Consumo"); 
 
 const app = express();
+const cors = require("cors");
+app.use(cors({
+  origin: "https://frontend-iot-3xgs.onrender.com"
+}));
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
