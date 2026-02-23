@@ -51,6 +51,16 @@ function iniciarServidor() {
     res.send("Backend IoT funcionando correctamente 🚀");
   });
 
+  // AGREGA ESTO:
+  app.get("/api/consumos", async (req, res) => {
+    try {
+      const consumos = await Consumo.find().sort({ timestamp: -1 }).limit(50);
+      res.json(consumos);
+    } catch (error) {
+      res.status(500).json({ error: "Error obteniendo consumos" });
+    }
+  });
+
   app.listen(PORT, () => {
     console.log(`🚀 API corriendo en puerto ${PORT}`);
   });
