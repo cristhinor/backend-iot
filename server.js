@@ -1,85 +1,105 @@
 require("dotenv").config();
-
 const express = require("express");
-const cors = require("cors");
+const mongoose = require("mongoose");
+const mqtt = require("mqtt");
+
+// 🔹 IMPORTA TU MODELO
+const Consumo = require("./models/Consumo"); 
 
 const app = express();
-app.use(express.static("public"));
-app.use(cors());
-app.use(express.json());
-
-const mqtt = require("mqtt");
-const mongoose = require("mongoose");
-
-// Conectar a MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log("🟢 MongoDB conectado"))
-  .catch(err => console.error("Error MongoDB:", err));
-
-// Esquema de datos
-const consumoSchema = new mongoose.Schema({
-  valor: Number,
-  fecha: { type: Date, default: Date.now }
-});
-
-const Consumo = mongoose.model("Consumo", consumoSchema);
-
-app.get("/api/consumos", async (req, res) => {
-  const datos = await Consumo.find()
-    .sort({ fecha: -1 })  // más recientes primero
-    .limit(15);           // solo envía los últimos 15 datos al dashboard
-
-  res.json(datos.reverse()); // volver a orden ascendente para la gráfica
-});
-
-// Conexión MQTT
-const client = mqtt.connect({
-  host: "816ed507f62b44af8b039c313433755e.s1.eu.hivemq.cloud",
-  port: 8883,
-  protocol: "mqtts",
-  username: "admin-cris",
-  password: "11Ismyreligion",
-  rejectUnauthorized: false
-});
-
-client.on("connect", () => {
-  console.log("🟢 Conectado a MQTT");
-  client.subscribe("casa/consumo");
-});
-
-client.on("message", async (topic, message) => {
-  if (topic === "casa/consumo") {
-    const valor = parseFloat(message.toString());
-
-    const nuevoDato = new Consumo({ valor });
-    await nuevoDato.save();
-
-    console.log("📥 Dato guardado:", valor);
-  }
-});
-
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 API corriendo en puerto ${PORT}`);
+app.use(express.json());
+
+/* ===============================
+   🔥 CONFIGURACIÓN MONGODB
+================================ */
+
+mongoose.set("strictQuery", true);
+
+async function conectarMongo() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 10000,
+    });
+
+    console.log("🟢 Conectado a MongoDB");
+
+    iniciarServidor();
+    iniciarMQTT();
+
+  } catch (error) {
+    console.error("❌ Error conectando a MongoDB:", error);
+    process.exit(1); // Si no hay DB, no arranca
+  }
+}
+
+mongoose.connection.on("disconnected", () => {
+  console.error("🔴 MongoDB se desconectó");
 });
 
-app.get("/api/consumos/rango", async (req, res) => {
+mongoose.connection.on("error", (err) => {
+  console.error("❌ Error en MongoDB:", err);
+});
+
+/* ===============================
+   🚀 SERVIDOR EXPRESS
+================================ */
+
+function iniciarServidor() {
+  app.get("/", (req, res) => {
+    res.send("Backend IoT funcionando correctamente 🚀");
+  });
+
+  app.listen(PORT, () => {
+    console.log(`🚀 API corriendo en puerto ${PORT}`);
+  });
+}
+
+/* ===============================
+   📡 MQTT
+================================ */
+
+function iniciarMQTT() {
+  const client = mqtt.connect(process.env.MQTT_BROKER, {
+    reconnectPeriod: 5000,
+  });
+
+  client.on("connect", () => {
+    console.log("🟢 Conectado a MQTT");
+    client.subscribe("casa/consumo");
+  });
+
+client.on("message", async (topic, message) => {
   try {
-    const { inicio, fin } = req.query;
-
-    const fechaInicio = new Date(inicio);
-    const fechaFin = new Date(fin);
-
-    const datos = await Consumo.find({
-      fecha: {
-        $gte: fechaInicio,
-        $lte: fechaFin
-      }
-    }).sort({ fecha: 1 });
-
-    res.json(datos);
+    const valor = parseFloat(message.toString()); // antes era JSON.parse
+    const nuevoConsumo = new Consumo({ valor });
+    await nuevoConsumo.save();
+    console.log("📦 Consumo guardado:", valor);
   } catch (error) {
-    res.status(500).json({ error: "Error filtrando datos" });
+    console.error("❌ Error guardando consumo:", error);
   }
 });
+
+  client.on("error", (err) => {
+    console.error("❌ Error MQTT:", err);
+  });
+}
+
+/* ===============================
+   🛡 MANEJO GLOBAL DE ERRORES
+================================ */
+
+process.on("uncaughtException", (err) => {
+  console.error("❌ Error no capturado:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("❌ Promesa no manejada:", err);
+});
+
+/* ===============================
+   🔥 INICIAR TODO
+================================ */
+
+conectarMongo();
