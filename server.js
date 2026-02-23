@@ -68,12 +68,18 @@ function iniciarServidor() {
   app.get("/api/consumos/rango", async (req, res) => {
   try {
     const { inicio, fin } = req.query;
+    
+    // Convertir hora local Colombia (UTC-5) a UTC
+    const inicioUTC = new Date(new Date(inicio).getTime() + 5 * 60 * 60 * 1000);
+    const finUTC = new Date(new Date(fin).getTime() + 5 * 60 * 60 * 1000);
+
     const consumos = await Consumo.find({
       timestamp: {
-        $gte: new Date(inicio),
-        $lte: new Date(fin)
+        $gte: inicioUTC,
+        $lte: finUTC
       }
     }).sort({ timestamp: 1 });
+
     res.json(consumos);
   } catch (error) {
     res.status(500).json({ error: "Error obteniendo rango" });
