@@ -61,7 +61,10 @@ function iniciarServidor() {
 ================================ */
 
 function iniciarMQTT() {
-  const client = mqtt.connect(process.env.MQTT_BROKER, {
+  const brokerUrl = `mqtts://${process.env.MQTT_HOST}:8883`;
+  const client = mqtt.connect(brokerUrl, {
+    username: process.env.MQTT_USER,
+    password: process.env.MQTT_PASS,
     reconnectPeriod: 5000,
   });
 
@@ -70,16 +73,16 @@ function iniciarMQTT() {
     client.subscribe("casa/consumo");
   });
 
-client.on("message", async (topic, message) => {
-  try {
-    const valor = parseFloat(message.toString()); // antes era JSON.parse
-    const nuevoConsumo = new Consumo({ valor });
-    await nuevoConsumo.save();
-    console.log("📦 Consumo guardado:", valor);
-  } catch (error) {
-    console.error("❌ Error guardando consumo:", error);
-  }
-});
+  client.on("message", async (topic, message) => {
+    try {
+      const valor = parseFloat(message.toString());
+      const nuevoConsumo = new Consumo({ valor });
+      await nuevoConsumo.save();
+      console.log("📦 Consumo guardado:", valor);
+    } catch (error) {
+      console.error("❌ Error guardando consumo:", error);
+    }
+  });
 
   client.on("error", (err) => {
     console.error("❌ Error MQTT:", err);
