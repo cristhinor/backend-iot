@@ -61,6 +61,21 @@ function iniciarServidor() {
     }
   });
 
+  app.get("/api/consumos/rango", async (req, res) => {
+  try {
+    const { inicio, fin } = req.query;
+    const consumos = await Consumo.find({
+      timestamp: {
+        $gte: new Date(inicio),
+        $lte: new Date(fin)
+      }
+    }).sort({ timestamp: 1 });
+    res.json(consumos);
+  } catch (error) {
+    res.status(500).json({ error: "Error obteniendo rango" });
+  }
+});
+
   app.listen(PORT, () => {
     console.log(`🚀 API corriendo en puerto ${PORT}`);
   });

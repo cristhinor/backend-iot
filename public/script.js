@@ -164,7 +164,7 @@ function actualizarConexion(conectado){
 
 async function cargarHistorico() {
   try {
-    const respuesta = await fetch("http://localhost:3000/api/consumos");
+    const respuesta = await fetch("https://backend-iot-mb58.onrender.com/api/consumos");
     const datos = await respuesta.json();
 
     // 🔥 LIMPIAR ARRAYS ANTES DE LLENAR
@@ -172,7 +172,7 @@ async function cargarHistorico() {
     datosConsumo.length = 0;
 
     datos.forEach(dato => {
-      const fecha = new Date(dato.fecha).toLocaleTimeString();
+      const fecha = new Date(dato.timestamp).toLocaleTimeString();
       const valor = dato.valor;
 
       etiquetasTiempo.push(fecha);

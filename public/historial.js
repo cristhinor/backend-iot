@@ -25,8 +25,8 @@ async function filtrar() {
   }
 
   const res = await fetch(
-    `http://localhost:3000/api/consumos/rango?inicio=${inicio}&fin=${fin}`
-  );
+  `https://backend-iot-mb58.onrender.com/api/consumos/rango?inicio=${inicio}&fin=${fin}`
+);
 
   datosFiltrados = await res.json();
 
@@ -34,7 +34,7 @@ async function filtrar() {
   grafica.data.datasets[0].data = [];
 
   datosFiltrados.forEach(d => {
-    grafica.data.labels.push(new Date(d.fecha).toLocaleString());
+    grafica.data.labels.push(new Date(d.timestamp).toLocaleString());
     grafica.data.datasets[0].data.push(d.valor);
   });
 
@@ -51,7 +51,7 @@ function descargarCSV() {
   let csv = "Fecha,Consumo\n";
 
   datosFiltrados.forEach(d => {
-    csv += `${new Date(d.fecha).toLocaleString()},${d.valor}\n`;
+    csv += `${new Date(d.timestamp).toLocaleString()},${d.valor}\n`;
   });
 
   const blob = new Blob([csv], { type: "text/csv" });
