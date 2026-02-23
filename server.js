@@ -2,18 +2,28 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const mqtt = require("mqtt");
+const cors = require("cors");
 
-// 🔹 IMPORTA TU MODELO
-const Consumo = require("./models/Consumo"); 
+const Consumo = require("./models/Consumo");
 
 const app = express();
-const cors = require("cors");
+const PORT = process.env.PORT || 3000;
+
+/* ===============================
+   🔐 CORS
+================================ */
+
 app.use(cors({
   origin: "https://frontend-iot-3xgs.onrender.com"
 }));
-const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
+
+/* ===============================
+   🔥 VARIABLE GLOBAL MQTT
+================================ */
+
+let mqttClient;
 
 /* ===============================
    🔥 CONFIGURACIÓN MONGODB
@@ -29,62 +39,75 @@ async function conectarMongo() {
 
     console.log("🟢 Conectado a MongoDB");
 
-    iniciarServidor();
     iniciarMQTT();
+    iniciarServidor();
 
   } catch (error) {
     console.error("❌ Error conectando a MongoDB:", error);
-    process.exit(1); // Si no hay DB, no arranca
+    process.exit(1);
   }
 }
-
-mongoose.connection.on("disconnected", () => {
-  console.error("🔴 MongoDB se desconectó");
-});
-
-mongoose.connection.on("error", (err) => {
-  console.error("❌ Error en MongoDB:", err);
-});
 
 /* ===============================
    🚀 SERVIDOR EXPRESS
 ================================ */
 
 function iniciarServidor() {
+
   app.get("/", (req, res) => {
     res.send("Backend IoT funcionando correctamente 🚀");
   });
 
-  // AGREGA ESTO:
   app.get("/api/consumos", async (req, res) => {
     try {
-      const consumos = await Consumo.find().sort({ timestamp: -1 }).limit(50);
+      const consumos = await Consumo.find()
+        .sort({ timestamp: -1 })
+        .limit(50);
+
       res.json(consumos);
+
     } catch (error) {
       res.status(500).json({ error: "Error obteniendo consumos" });
     }
   });
 
   app.get("/api/consumos/rango", async (req, res) => {
-  try {
-    const { inicio, fin } = req.query;
-    
-    // Convertir hora local Colombia (UTC-5) a UTC
-    const inicioUTC = new Date(new Date(inicio).getTime() + 5 * 60 * 60 * 1000);
-    const finUTC = new Date(new Date(fin).getTime() + 5 * 60 * 60 * 1000);
+    try {
+      const { inicio, fin } = req.query;
 
-    const consumos = await Consumo.find({
-      timestamp: {
-        $gte: inicioUTC,
-        $lte: finUTC
-      }
-    }).sort({ timestamp: 1 });
+      const inicioUTC = new Date(new Date(inicio).getTime() + 5 * 60 * 60 * 1000);
+      const finUTC = new Date(new Date(fin).getTime() + 5 * 60 * 60 * 1000);
 
-    res.json(consumos);
-  } catch (error) {
-    res.status(500).json({ error: "Error obteniendo rango" });
-  }
-});
+      const consumos = await Consumo.find({
+        timestamp: {
+          $gte: inicioUTC,
+          $lte: finUTC
+        }
+      }).sort({ timestamp: 1 });
+
+      res.json(consumos);
+
+    } catch (error) {
+      res.status(500).json({ error: "Error obteniendo rango" });
+    }
+  });
+
+  /* ===============================
+     🔥 NUEVO ENDPOINT PARA LED
+  ================================= */
+
+  app.post("/api/led", (req, res) => {
+    const { estado } = req.body;
+
+    if (!mqttClient) {
+      return res.status(500).json({ error: "MQTT no conectado" });
+    }
+
+    mqttClient.publish("casa/led", estado);
+    console.log("💡 Comando LED enviado:", estado);
+
+    res.json({ mensaje: "Comando enviado correctamente" });
+  });
 
   app.listen(PORT, () => {
     console.log(`🚀 API corriendo en puerto ${PORT}`);
@@ -96,30 +119,42 @@ function iniciarServidor() {
 ================================ */
 
 function iniciarMQTT() {
+
   const brokerUrl = `mqtts://${process.env.MQTT_HOST}:8883`;
-  const client = mqtt.connect(brokerUrl, {
+
+  mqttClient = mqtt.connect(brokerUrl, {
     username: process.env.MQTT_USER,
     password: process.env.MQTT_PASS,
     reconnectPeriod: 5000,
   });
 
-  client.on("connect", () => {
+  mqttClient.on("connect", () => {
     console.log("🟢 Conectado a MQTT");
-    client.subscribe("casa/consumo");
+
+    mqttClient.subscribe("casa/consumo", (err) => {
+      if (err) {
+        console.error("❌ Error al suscribirse:", err);
+      } else {
+        console.log("📡 Suscrito a casa/consumo");
+      }
+    });
   });
 
-  client.on("message", async (topic, message) => {
+  mqttClient.on("message", async (topic, message) => {
     try {
       const valor = parseFloat(message.toString());
+
       const nuevoConsumo = new Consumo({ valor });
       await nuevoConsumo.save();
+
       console.log("📦 Consumo guardado:", valor);
+
     } catch (error) {
       console.error("❌ Error guardando consumo:", error);
     }
   });
 
-  client.on("error", (err) => {
+  mqttClient.on("error", (err) => {
     console.error("❌ Error MQTT:", err);
   });
 }

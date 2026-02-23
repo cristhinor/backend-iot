@@ -1,10 +1,10 @@
 // 🔹 CONFIGURA TUS DATOS
-const options = {
-  username: "admin-cris",
-  password: "11Ismyreligion"
-};
+//const options = {
+//  username: "admin-cris",
+//  password: "11Ismyreligion"
+//};
 
-const client = mqtt.connect("wss://816ed507f62b44af8b039c313433755e.s1.eu.hivemq.cloud:8884/mqtt", options);
+//const client = mqtt.connect("wss://816ed507f62b44af8b039c313433755e.s1.eu.hivemq.cloud:8884/mqtt", options);
 
 let estadoLED = false;
 let datosConsumo = [];
@@ -46,6 +46,7 @@ const grafica = new Chart(ctx, {
 cargarHistorico();
 
 // 🔹 CONEXIÓN MQTT
+/*
 client.on("connect", () => {
   console.log("MQTT conectado ✅");
   actualizarConexion(true);
@@ -67,8 +68,10 @@ client.on("error", (err) => {
   console.error("Error MQTT:", err);
   actualizarConexion(false);
 });
+*/
 
 // 🔹 MENSAJES
+/*
 client.on("message", (topic, message) => {
   const msg = message.toString();
 
@@ -92,10 +95,30 @@ client.on("message", (topic, message) => {
     actualizarUI();
   }
 });
+*/
 
 // 🔹 TOGGLE LED
+/*
 function toggleLED(){
   client.publish("casa/led", estadoLED ? "OFF" : "ON");
+}
+*/
+async function toggleLED(){
+
+  const nuevoEstado = estadoLED ? "OFF" : "ON";
+
+  try {
+    await fetch("https://backend-iot-mb58.onrender.com/api/led", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ estado: nuevoEstado })
+    });
+
+  } catch (error) {
+    console.error("Error enviando comando:", error);
+  }
 }
 
 // 🔹 ACTUALIZAR UI
@@ -147,6 +170,7 @@ function descargarArchivo(contenido, nombre){
   a.click();
 }
 
+/*
 function actualizarConexion(conectado){
   const texto = document.getElementById("estadoConexionTexto");
   const punto = document.getElementById("indicadorConexion");
@@ -161,7 +185,7 @@ function actualizarConexion(conectado){
     punto.classList.add("rojo");
   }
 }
-
+*/
 async function cargarHistorico() {
   try {
     const respuesta = await fetch("https://backend-iot-mb58.onrender.com/api/consumos");
@@ -182,4 +206,57 @@ async function cargarHistorico() {
   } catch (error) {
     console.error("Error cargando histórico:", error);
   }
+}
+
+/* =========================
+   MODO CLARO / OSCURO
+========================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const toggle = document.getElementById("theme-toggle");
+
+  if (!toggle) return; // seguridad por si no existe el botón
+
+  // Aplicar tema guardado
+  const savedTheme = localStorage.getItem("theme");
+
+  if (savedTheme === "dark") {
+    document.body.classList.add("dark");
+    toggle.textContent = "☀️";
+    actualizarGraficaModoOscuro(true);
+  }
+
+  toggle.addEventListener("click", () => {
+    document.body.classList.toggle("dark");
+
+    const isDark = document.body.classList.contains("dark");
+
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+    toggle.textContent = isDark ? "☀️" : "🌙";
+
+    actualizarGraficaModoOscuro(isDark);
+  });
+
+});
+
+
+/* =========================
+   CAMBIAR COLORES DE CHART.JS
+========================= */
+
+function actualizarGraficaModoOscuro(esOscuro){
+
+  const colorTexto = esOscuro ? "#f5f5f5" : "#222";
+  const colorLinea = esOscuro ? "#4dabf7" : "#007bff";
+
+  grafica.data.datasets[0].borderColor = colorLinea;
+
+  grafica.options.scales.x.ticks = { color: colorTexto };
+  grafica.options.scales.y.ticks = { color: colorTexto };
+
+  grafica.options.scales.x.title.color = colorTexto;
+  grafica.options.scales.y.title.color = colorTexto;
+
+  grafica.update();
 }

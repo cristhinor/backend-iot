@@ -1,9 +1,41 @@
+/* =========================
+   VARIABLES DE TEMA
+========================= */
+
+:root {
+  --bg-primary: #f4f6f9;
+  --bg-secondary: #ffffff;
+  --text-primary: #222;
+  --card-bg: #ffffff;
+  --nav-bg: #e9ecef;
+  --border-color: #e0e0e0;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --accent: #007bff;
+}
+
+.dark {
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #f5f5f5;
+  --card-bg: #1e1e1e;
+  --nav-bg: #2a2a2a;
+  --border-color: #333;
+  --shadow-color: rgba(0, 0, 0, 0.4);
+  --accent: #4dabf7;
+}
+
+/* =========================
+   BASE GENERAL
+========================= */
+
 body {
-  font-family: Arial;
-  background: #f4f6f9;
+  font-family: Arial, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   text-align: center;
   margin: 0;
   padding: 20px;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -11,17 +43,51 @@ body {
   margin: auto;
 }
 
+/* =========================
+   TOPBAR
+========================= */
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.theme-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: transform 0.2s ease;
+}
+
+.theme-btn:hover {
+  transform: scale(1.1);
+}
+
+/* =========================
+   TARJETAS
+========================= */
+
 .card {
-  background: white;
+  background-color: var(--card-bg);
   padding: 20px;
   margin: 20px 0;
   border-radius: 15px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px var(--shadow-color);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
 canvas {
   max-height: 400px;
 }
+
+/* =========================
+   TOGGLE LED
+========================= */
 
 .toggle {
   width: 120px;
@@ -34,7 +100,7 @@ canvas {
   color: white;
   cursor: pointer;
   transition: 0.3s;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 20px var(--shadow-color);
 }
 
 .toggle.on {
@@ -45,6 +111,10 @@ canvas {
   background: #e74c3c;
 }
 
+/* =========================
+   BOTONES GENERALES
+========================= */
+
 button {
   padding: 10px 20px;
   margin: 10px;
@@ -53,6 +123,10 @@ button {
   cursor: pointer;
   font-size: 14px;
 }
+
+/* =========================
+   CONEXIÓN MQTT
+========================= */
 
 .conexion {
   display: flex;
@@ -77,14 +151,24 @@ button {
   background: #e74c3c;
 }
 
+/* =========================
+   NAVEGACIÓN
+========================= */
+
 .nav {
   display: flex;
   gap: 20px;
+  justify-content: center;
   margin-bottom: 20px;
 }
 
 .nav a {
   text-decoration: none;
   font-weight: bold;
-  color: #333;
+  color: var(--text-primary);
+  transition: color 0.2s ease;
+}
+
+.nav a:hover {
+  color: var(--accent);
 }
