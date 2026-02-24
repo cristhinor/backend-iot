@@ -97,7 +97,7 @@ function iniciarServidor() {
      🔥 ENDPOINT PARA LED
   ================================= */
 //ENDPOINT PARA CONSULTAR ESTADO DEL LED
-  app.post("/api/led", (req, res) => {
+  app.get("/api/led", (req, res) => {
     res.json({ estado: estadoLEDActual });
   });
 //ENDPOINT PARA CAMBIAR ESTADO DEL LED
