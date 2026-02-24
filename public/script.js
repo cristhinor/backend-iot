@@ -127,12 +127,9 @@ async function cargarEstadoLED(){
   try {
     const res = await fetch("https://backend-iot-mb58.onrender.com/api/led");
 
-    if(res.ok){
-      estadoLED = !estadoLED;
-      actualizarUI();
-    }
     const data = await res.json();
-
+    estadoLED = !estadoLED;
+    actualizarUI();
 
   } catch (error) {
     console.error("Error cargando estado LED:", error);
