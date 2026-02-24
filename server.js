@@ -25,6 +25,7 @@ app.use(express.json());
 
 let mqttClient;
 let estadoLEDActual = "OFF";
+let sseClients = [];
 
 /* ===============================
    🔥 CONFIGURACIÓN MONGODB
@@ -56,7 +57,6 @@ async function conectarMongo() {
 function iniciarServidor() {
 
   // Guardar clientes SSE conectados
-  let sseClients = [];
   app.get("/api/stream", (req, res) => {
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
