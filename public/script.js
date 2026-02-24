@@ -104,19 +104,15 @@ function toggleLED(){
 */
 async function toggleLED(){
 
-  const nuevoEstado = estadoLED ? "OFF" : "ON";
+  const estadoActual = document.getElementById("ledIndicador").classList.contains("encendido") ? "ON" : "OFF";
+  const nuevoEstado = estadoActual === "ON" ? "OFF" : "ON";
 
   try {
     await fetch("https://backend-iot-mb58.onrender.com/api/led", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ estado: nuevoEstado })
     });
-
-    estadoLED = !estadoLED;
-    actualizarUI();
 
   } catch (error) {
     console.error("Error enviando comando:", error);
@@ -126,10 +122,9 @@ async function toggleLED(){
 async function cargarEstadoLED(){
   try {
     const res = await fetch("https://backend-iot-mb58.onrender.com/api/led");
-
     const data = await res.json();
     estadoLED = !estadoLED;
-    actualizarUI();
+    actualizarUI(data.estado);
 
   } catch (error) {
     console.error("Error cargando estado LED:", error);
@@ -137,19 +132,17 @@ async function cargarEstadoLED(){
 }
 
 // 🔹 ACTUALIZAR UI
-function actualizarUI(){
-  const btn = document.getElementById("toggleBtn");
+function actualizarUI(estadoConfirmado) {
+  const indicador = document.getElementById("ledIndicador");
   const texto = document.getElementById("estadoTexto");
 
-  if(estadoLED){
-    btn.classList.remove("off");
-    btn.classList.add("on");
-    btn.innerText = "ON";
+  if (estadoConfirmado === "ON") {
+    indicador.classList.add("encendido");
+    indicador.classList.remove("apagado");
     texto.innerText = "LED encendido";
-  } else {
-    btn.classList.remove("on");
-    btn.classList.add("off");
-    btn.innerText = "OFF";
+  } else if (estadoConfirmado === "OFF") {
+    indicador.classList.add("apagado");
+    indicador.classList.remove("encendido");
     texto.innerText = "LED apagado";
   }
 }
@@ -236,13 +229,12 @@ document.addEventListener("DOMContentLoaded", () => {
   eventSource.onmessage = (event) => {
     const dato = JSON.parse(event.data);
 
-    if (dato.tipo === "led") {
-      estadoLED = dato.estado === "ON";
-      actualizarUI();
+    if (dato.tipo === "led_confirmado") {
+      actualizarUI(dato.estado);
       return;
     }
-    const tiempo = new Date(dato.timestamp).toLocaleTimeString();
 
+    const tiempo = new Date(dato.timestamp).toLocaleTimeString();
     etiquetasTiempo.push(tiempo);
     datosConsumo.push(dato.valor);
 

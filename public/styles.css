@@ -273,3 +273,45 @@ button {
 .btn-volver:hover {
   opacity: 0.85;
 }
+
+/* =========================
+   BOTÓN LED Y INDICADOR
+========================= */
+
+.toggle-btn {
+  display: inline-block;
+  padding: 14px 30px;
+  background: var(--accent);
+  color: white;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin: 20px auto;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 4px 15px var(--shadow-color);
+}
+
+.toggle-btn:hover {
+  opacity: 0.85;
+}
+
+.led-indicador {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin: 15px auto;
+  background: #555;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.led-indicador.encendido {
+  background: #2ecc71;
+  box-shadow: 0 0 20px #2ecc71;
+}
+
+.led-indicador.apagado {
+  background: #e74c3c;
+  box-shadow: 0 0 20px #e74c3c;
+}

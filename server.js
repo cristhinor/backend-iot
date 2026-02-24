@@ -165,25 +165,40 @@ function iniciarMQTT() {
         console.log("📡 Suscrito a casa/consumo");
       }
     });
+
+    mqttClient.subscribe("casa/led_estado", (err) => {
+      if (err) {
+        console.error("❌ Error al suscribirse a led_estado:", err);
+      } else {
+        console.log("📡 Suscrito a casa/led_estado");
+      }
+    });
+
   });
 
   mqttClient.on("message", async (topic, message) => {
-    try {
-      const valor = parseFloat(message.toString());
+  const msg = message.toString();
 
+  if (topic === "casa/led_estado") {
+    estadoLEDActual = msg;
+    const evento = JSON.stringify({ tipo: "led_confirmado", estado: msg });
+    sseClients.forEach(client => client.write(`data: ${evento}\n\n`));
+    return;
+  }
+
+  if (topic === "casa/consumo") {
+    try {
+      const valor = parseFloat(msg);
       const nuevoConsumo = new Consumo({ valor });
       await nuevoConsumo.save();
-
       console.log("📦 Consumo guardado:", valor);
-
-      // Empujar dato a todos los clientes SSE conectados
       const evento = JSON.stringify({ valor, timestamp: new Date() });
       sseClients.forEach(client => client.write(`data: ${evento}\n\n`));
-
     } catch (error) {
       console.error("❌ Error guardando consumo:", error);
     }
-  });
+  }
+});
 
   mqttClient.on("error", (err) => {
     console.error("❌ Error MQTT:", err);
