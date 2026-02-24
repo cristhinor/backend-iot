@@ -234,7 +234,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   cargarHistorico();
   cargarEstadoLED();
-  setInterval(cargarHistorico, 5000);
+  const eventSource = new EventSource("https://backend-iot-mb58.onrender.com/api/stream");
+
+  eventSource.onmessage = (event) => {
+    const dato = JSON.parse(event.data);
+    const tiempo = new Date(dato.timestamp).toLocaleTimeString();
+
+    etiquetasTiempo.push(tiempo);
+    datosConsumo.push(dato.valor);
+
+    while (datosConsumo.length > 15) {
+      etiquetasTiempo.shift();
+      datosConsumo.shift();
+    }
+
+    grafica.update();
+  };
+
+  eventSource.onerror = () => {
+    console.error("Error en SSE, reconectando...");
+  };
 
   const toggle = document.getElementById("theme-toggle");
 

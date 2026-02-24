@@ -55,6 +55,23 @@ async function conectarMongo() {
 
 function iniciarServidor() {
 
+  // Guardar clientes SSE conectados
+  let sseClients = [];
+  app.get("/api/stream", (req, res) => {
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.flushHeaders();
+
+    sseClients.push(res);
+    console.log("📡 Cliente SSE conectado, total:", sseClients.length);
+
+    req.on("close", () => {
+      sseClients = sseClients.filter(c => c !== res);
+      console.log("📡 Cliente SSE desconectado, total:", sseClients.length);
+    });
+  });
+
   app.get("/", (req, res) => {
     res.send("Backend IoT funcionando correctamente 🚀");
   });
@@ -153,6 +170,10 @@ function iniciarMQTT() {
       await nuevoConsumo.save();
 
       console.log("📦 Consumo guardado:", valor);
+
+      // Empujar dato a todos los clientes SSE conectados
+      const evento = JSON.stringify({ valor, timestamp: new Date() });
+      sseClients.forEach(client => client.write(`data: ${evento}\n\n`));
 
     } catch (error) {
       console.error("❌ Error guardando consumo:", error);
