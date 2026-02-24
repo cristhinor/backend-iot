@@ -16,9 +16,17 @@
     <button id="theme-toggle" class="theme-btn">🌙</button>
   </div>
 
-  <div class="nav">
-    <a href="historial.html">Historial</a>
+  <!-- Botón hamburguesa -->
+  <button class="hamburger" onclick="toggleMenu()">☰</button>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">Menú</div>
+    <a href="historial.html" class="sidebar-item">📊 Historial</a>
   </div>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
   <div class="conexion">
   <span id="estadoConexionTexto">Desconectado</span>
@@ -43,6 +51,13 @@
 </div>
 
 <script src="script.js"></script>
+
+<script>
+function toggleMenu() {
+  document.getElementById("sidebar").classList.toggle("open");
+  document.getElementById("overlay").classList.toggle("show");
+}
+</script>
 
 </body>
 </html>
