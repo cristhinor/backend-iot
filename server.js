@@ -128,6 +128,11 @@ function iniciarServidor() {
     mqttClient.publish("casa/led", estado);
     estadoLEDActual = estado; // guardamos estado actual
     console.log("💡 Comando LED enviado:", estado);
+  
+    // Avisar a todos los clientes SSE del nuevo estado
+    const evento = JSON.stringify({ tipo: "led", estado });
+    sseClients.forEach(client => client.write(`data: ${evento}\n\n`));
+
     res.json({ mensaje: "Comando enviado correctamente" });
   });
 

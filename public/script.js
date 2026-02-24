@@ -238,6 +238,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   eventSource.onmessage = (event) => {
     const dato = JSON.parse(event.data);
+
+    if (dato.tipo === "led") {
+      estadoLED = dato.estado === "ON";
+      actualizarUI();
+      return;
+    }
     const tiempo = new Date(dato.timestamp).toLocaleTimeString();
 
     etiquetasTiempo.push(tiempo);
