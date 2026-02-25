@@ -130,3 +130,45 @@ function limpiarRuta() {
   ruta.setLatLngs([]);
   document.getElementById("totalPuntos").innerText = 0;
 }
+
+function resetZoom() {
+  if (marcador) {
+    mapa.setView(marcador.getLatLng(), 15);
+  }
+}
+
+async function descargarCSVGPS() {
+  const inicio = document.getElementById("gpsInicio").value;
+  const fin = document.getElementById("gpsFin").value;
+
+  if (!inicio || !fin) {
+    alert("Selecciona ambas fechas");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BACKEND}/api/ubicaciones/rango?inicio=${inicio}&fin=${fin}`);
+    const datos = await res.json();
+
+    if (datos.length === 0) {
+      alert("No hay datos en ese rango");
+      return;
+    }
+
+    let csv = "Fecha,Latitud,Longitud\n";
+    datos.forEach(d => {
+      csv += `${new Date(d.timestamp).toLocaleString()},${d.latitud},${d.longitud}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "historial_gps.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error("Error descargando CSV GPS:", error);
+  }
+}

@@ -64,6 +64,7 @@
 
   <div class="topbar">
     <h1>📍 Mapa GPS</h1>
+    <button id="theme-toggle" class="theme-btn">🌙</button>
   </div>
 
   <div class="card">
@@ -75,6 +76,25 @@
     </div>
 
     <div id="mapa"></div>
+
+    <div style="text-align: right; margin-top: 10px;">
+        <button class="btn-sim" onclick="resetZoom()">🏠 Centrar mapa</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📥 Descargar historial GPS</h2>
+    <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; align-items: center;">
+        <div>
+            <label>Desde:</label>
+            <input type="datetime-local" id="gpsInicio">
+        </div>
+        <div>
+            <label>Hasta:</label>
+            <input type="datetime-local" id="gpsFin">
+        </div>
+        <button class="btn-sim" onclick="descargarCSVGPS()">⬇ Descargar CSV</button>
+    </div>
   </div>
 
   <div class="card">
@@ -92,6 +112,7 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="tema.js"></script>
 <script src="mapa.js"></script>
 
 </body>

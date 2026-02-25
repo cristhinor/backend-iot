@@ -224,6 +224,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   cargarHistorico();
   cargarEstadoLED();
+
   const eventSource = new EventSource("https://backend-iot-mb58.onrender.com/api/stream");
 
   eventSource.onmessage = (event) => {
@@ -233,6 +234,8 @@ document.addEventListener("DOMContentLoaded", () => {
       actualizarUI(dato.estado);
       return;
     }
+
+    if (dato.tipo === "ubicacion") return; // ignorar en esta página
 
     const tiempo = new Date(dato.timestamp).toLocaleTimeString();
     etiquetasTiempo.push(tiempo);
@@ -249,30 +252,6 @@ document.addEventListener("DOMContentLoaded", () => {
   eventSource.onerror = () => {
     console.error("Error en SSE, reconectando...");
   };
-
-  const toggle = document.getElementById("theme-toggle");
-
-  if (!toggle) return; // seguridad por si no existe el botón
-
-  // Aplicar tema guardado
-  const savedTheme = localStorage.getItem("theme");
-
-  if (savedTheme === "dark") {
-    document.body.classList.add("dark");
-    toggle.textContent = "☀️";
-    actualizarGraficaModoOscuro(true);
-  }
-
-  toggle.addEventListener("click", () => {
-    document.body.classList.toggle("dark");
-
-    const isDark = document.body.classList.contains("dark");
-
-    localStorage.setItem("theme", isDark ? "dark" : "light");
-    toggle.textContent = isDark ? "☀️" : "🌙";
-
-    actualizarGraficaModoOscuro(isDark);
-  });
 
 });
 

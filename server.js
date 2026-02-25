@@ -166,6 +166,22 @@ app.post("/api/ubicaciones", async (req, res) => {
   }
 });
 
+app.get("/api/ubicaciones/rango", async (req, res) => {
+  try {
+    const { inicio, fin } = req.query;
+    const inicioUTC = new Date(new Date(inicio).getTime() + 5 * 60 * 60 * 1000);
+    const finUTC = new Date(new Date(fin).getTime() + 5 * 60 * 60 * 1000);
+
+    const ubicaciones = await Ubicacion.find({
+      timestamp: { $gte: inicioUTC, $lte: finUTC }
+    }).sort({ timestamp: 1 });
+
+    res.json(ubicaciones);
+  } catch (error) {
+    res.status(500).json({ error: "Error obteniendo rango GPS" });
+  }
+});
+
   app.listen(PORT, () => {
     console.log(`🚀 API corriendo en puerto ${PORT}`);
   });
