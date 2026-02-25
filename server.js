@@ -5,6 +5,7 @@ const mqtt = require("mqtt");
 const cors = require("cors");
 
 const Consumo = require("./models/Consumo");
+const Ubicacion = require("./models/Ubicacion");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -135,6 +136,35 @@ function iniciarServidor() {
 
     res.json({ mensaje: "Comando enviado correctamente" });
   });
+
+  // Obtener últimas 100 ubicaciones para la ruta
+app.get("/api/ubicaciones", async (req, res) => {
+  try {
+    const ubicaciones = await Ubicacion.find()
+      .sort({ timestamp: -1 })
+      .limit(100);
+    res.json(ubicaciones.reverse());
+  } catch (error) {
+    res.status(500).json({ error: "Error obteniendo ubicaciones" });
+  }
+});
+
+// Agregar ubicación simulada (para pruebas)
+app.post("/api/ubicaciones", async (req, res) => {
+  try {
+    const { latitud, longitud } = req.body;
+    const nueva = new Ubicacion({ latitud, longitud });
+    await nueva.save();
+    
+    // Empujar por SSE
+    const evento = JSON.stringify({ tipo: "ubicacion", latitud, longitud, timestamp: new Date() });
+    sseClients.forEach(client => client.write(`data: ${evento}\n\n`));
+    
+    res.json({ mensaje: "Ubicación guardada" });
+  } catch (error) {
+    res.status(500).json({ error: "Error guardando ubicación" });
+  }
+});
 
   app.listen(PORT, () => {
     console.log(`🚀 API corriendo en puerto ${PORT}`);

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa GPS - IoT</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    #mapa {
+      height: 500px;
+      width: 100%;
+      border-radius: 15px;
+      z-index: 1;
+    }
+    .mapa-info {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 15px 0;
+      flex-wrap: wrap;
+    }
+    .mapa-dato {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 15px;
+    }
+    .mapa-dato span {
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .sim-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 15px 0;
+    }
+    .btn-sim {
+      padding: 10px 20px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: opacity 0.2s;
+    }
+    .btn-sim:hover { opacity: 0.85; }
+    .btn-sim.stop {
+      background: #e74c3c;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="historial-nav">
+    <a href="index.html" class="btn-volver">← Volver al inicio</a>
+  </div>
+
+  <div class="topbar">
+    <h1>📍 Mapa GPS</h1>
+  </div>
+
+  <div class="card">
+    <div class="mapa-info">
+      <div class="mapa-dato">Latitud: <span id="latActual">--</span></div>
+      <div class="mapa-dato">Longitud: <span id="lngActual">--</span></div>
+      <div class="mapa-dato">Última actualización: <span id="timeActual">--</span></div>
+      <div class="mapa-dato">Puntos en ruta: <span id="totalPuntos">0</span></div>
+    </div>
+
+    <div id="mapa"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧪 Simulación GPS</h2>
+    <p style="color: var(--text-primary); opacity: 0.7; font-size: 13px;">
+      Simulando movimiento en Pasto, Colombia. Cuando conectes tu GPS real, esta sección desaparecerá.
+    </p>
+    <div class="sim-controls">
+      <button class="btn-sim" onclick="iniciarSimulacion()">▶ Iniciar simulación</button>
+      <button class="btn-sim stop" onclick="detenerSimulacion()">■ Detener</button>
+      <button class="btn-sim" onclick="limpiarRuta()">🗑 Limpiar ruta</button>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="mapa.js"></script>
+
+</body>
+</html>
