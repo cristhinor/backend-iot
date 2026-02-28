@@ -46,6 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }).addTo(mapa);
 
   cargarUbicaciones();
+  cargarEstadoViaje();
 
   const eventSource = new EventSource(`${BACKEND}/api/stream`);
   eventSource.onmessage = (event) => {
@@ -313,6 +314,9 @@ async function toggleViaje() {
       // Ajustar vista para ver toda la ruta
       mapa.fitBounds(rutaViaje.getBounds(), { padding: [50, 50] });
 
+      // Notificar a otros dispositivos via SSE
+      const evento = JSON.stringify({ tipo: "viaje_terminado" });
+
     } catch (error) {
       alert("Error terminando viaje");
     }
@@ -353,4 +357,106 @@ async function guardarCosto() {
   } catch (error) {
     alert("Error guardando costo");
   }
+}
+
+async function cargarEstadoViaje() {
+  try {
+    const res = await fetch(`${BACKEND}/api/viaje/estado`);
+    const { activo, ultimo } = await res.json();
+    const btn = document.getElementById("btnViaje");
+
+    if (activo) {
+      // Hay un viaje en curso
+      viajeActivo = true;
+      viajeId = activo._id;
+      ultimoViajeId = null;
+
+      btn.textContent = "🏁 Terminar viaje";
+      btn.style.background = "#e74c3c";
+
+      // Mostrar datos de inicio
+      document.getElementById("viajeInicioLat").innerText = `Lat: ${activo.inicio.latitud.toFixed(6)}`;
+      document.getElementById("viajeInicioLng").innerText = `Lng: ${activo.inicio.longitud.toFixed(6)}`;
+      document.getElementById("viajeInicioFecha").innerText = `Fecha: ${activo.inicio.fecha || "--"}`;
+      document.getElementById("viajeInicioHora").innerText = `Hora: ${activo.inicio.hora || "--"} UTC`;
+
+      // Marcador de inicio en mapa
+      const iconoInicio = L.divIcon({
+        className: "",
+        html: `<div style="
+          width: 16px; height: 16px;
+          background: #2ecc71;
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(46,204,113,0.8);
+        "></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+
+      marcadorInicio = L.marker([activo.inicio.latitud, activo.inicio.longitud], { icon: iconoInicio })
+        .addTo(mapa)
+        .bindPopup(`<b>🚗 Inicio del viaje</b><br>${activo.inicio.fecha} ${activo.inicio.hora} UTC`);
+
+    } else if (ultimo) {
+      // Mostrar último viaje completado
+      mostrarUltimoViaje(ultimo);
+    }
+
+  } catch (error) {
+    console.error("Error cargando estado del viaje:", error);
+  }
+}
+
+function mostrarUltimoViaje(viaje) {
+  const btn = document.getElementById("btnViaje");
+  btn.textContent = "🚗 Iniciar viaje";
+  btn.style.background = "";
+
+  document.getElementById("viajeInicioLat").innerText = `Lat: ${viaje.inicio.latitud.toFixed(6)}`;
+  document.getElementById("viajeInicioLng").innerText = `Lng: ${viaje.inicio.longitud.toFixed(6)}`;
+  document.getElementById("viajeInicioFecha").innerText = `Fecha: ${viaje.inicio.fecha || "--"}`;
+  document.getElementById("viajeInicioHora").innerText = `Hora: ${viaje.inicio.hora || "--"} UTC`;
+
+  document.getElementById("viajeFinLat").innerText = `Lat: ${viaje.fin.latitud.toFixed(6)}`;
+  document.getElementById("viajeFinLng").innerText = `Lng: ${viaje.fin.longitud.toFixed(6)}`;
+  document.getElementById("viajeFinFecha").innerText = `Fecha: ${viaje.fin.fecha || "--"}`;
+  document.getElementById("viajeFinHora").innerText = `Hora: ${viaje.fin.hora || "--"} UTC`;
+
+  if (viaje.costo !== null && viaje.costo !== undefined) {
+    const costoFormateado = new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0
+    }).format(viaje.costo);
+    document.getElementById("viajeCostoPanel").style.display = "block";
+    document.getElementById("viajeCostoTexto").innerText = costoFormateado;
+  }
+
+  // Marcadores en mapa
+  const iconoInicio = L.divIcon({
+    className: "",
+    html: `<div style="width:16px;height:16px;background:#2ecc71;border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(46,204,113,0.8);"></div>`,
+    iconSize: [16, 16], iconAnchor: [8, 8]
+  });
+  const iconoFin = L.divIcon({
+    className: "",
+    html: `<div style="width:16px;height:16px;background:#e74c3c;border:3px solid white;border-radius:50%;box-shadow:0 0 10px rgba(231,76,60,0.8);"></div>`,
+    iconSize: [16, 16], iconAnchor: [8, 8]
+  });
+
+  marcadorInicio = L.marker([viaje.inicio.latitud, viaje.inicio.longitud], { icon: iconoInicio })
+    .addTo(mapa)
+    .bindPopup(`<b>🚗 Inicio del viaje</b><br>${viaje.inicio.fecha} ${viaje.inicio.hora} UTC`);
+
+  marcadorFin = L.marker([viaje.fin.latitud, viaje.fin.longitud], { icon: iconoFin })
+    .addTo(mapa)
+    .bindPopup(`<b>🏁 Fin del viaje</b><br>${viaje.fin.fecha} ${viaje.fin.hora} UTC`);
+
+  rutaViaje = L.polyline([
+    [viaje.inicio.latitud, viaje.inicio.longitud],
+    [viaje.fin.latitud, viaje.fin.longitud]
+  ], { color: "#e74c3c", weight: 4, opacity: 0.8 }).addTo(mapa);
+
+  mapa.fitBounds(rutaViaje.getBounds(), { padding: [50, 50] });
 }

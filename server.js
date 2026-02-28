@@ -256,6 +256,16 @@ app.get("/api/viajes/csv", async (req, res) => {
   }
 });
 
+app.get("/api/viaje/estado", async (req, res) => {
+  try {
+    const activo = await Viaje.findOne({ completado: false }).sort({ "inicio.timestamp": -1 });
+    const ultimo = await Viaje.findOne({ completado: true }).sort({ "inicio.timestamp": -1 });
+    res.json({ activo: activo || null, ultimo: ultimo || null });
+  } catch (error) {
+    res.status(500).json({ error: "Error obteniendo estado del viaje" });
+  }
+});
+
   app.listen(PORT, () => {
     console.log(`🚀 API corriendo en puerto ${PORT}`);
   });
