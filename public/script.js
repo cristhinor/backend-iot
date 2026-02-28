@@ -237,6 +237,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (dato.tipo === "ubicacion") return; // ignorar en esta página
 
+    // Solo graficar si tiene timestamp y valor válidos
+    if (!dato.timestamp || dato.valor === undefined) return;
+
     const tiempo = new Date(dato.timestamp).toLocaleTimeString();
     etiquetasTiempo.push(tiempo);
     datosConsumo.push(dato.valor);
