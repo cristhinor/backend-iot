@@ -1,14 +1,12 @@
 const BACKEND = "https://backend-iot-mb58.onrender.com";
 
-// Coordenadas base: Pasto, Colombia
 let latBase = 1.2136;
 let lngBase = -77.2811;
 
-let mapa, marcador, ruta, circulo;
+let mapa, marcador, ruta;
 let simInterval = null;
 let puntosRuta = [];
 
-// Inicializar mapa
 document.addEventListener("DOMContentLoaded", () => {
   mapa = L.map("mapa").setView([latBase, lngBase], 15);
 
@@ -17,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     maxZoom: 19
   }).addTo(mapa);
 
-  // Icono personalizado
   const icono = L.divIcon({
     className: "",
     html: `<div style="
@@ -41,21 +38,14 @@ document.addEventListener("DOMContentLoaded", () => {
     dashArray: "6, 4"
   }).addTo(mapa);
 
-  // Cargar historial existente
   cargarUbicaciones();
 
-  // Escuchar SSE para actualizaciones en tiempo real
   const eventSource = new EventSource(`${BACKEND}/api/stream`);
   eventSource.onmessage = (event) => {
     const dato = JSON.parse(event.data);
-    // En el SSE
     if (dato.tipo === "ubicacion") {
-      actualizarMapa(dato.latitud, dato.longitud, dato.timestamp, dato.fecha, dato.hora);
+      actualizarMapa(dato.latitud, dato.longitud, dato.fecha, dato.hora);
     }
-
-// En cargarUbicaciones
-const ultimo = datos[datos.length - 1];
-actualizarMapa(ultimo.latitud, ultimo.longitud, ultimo.timestamp, ultimo.fecha, ultimo.hora);
   };
 });
 
@@ -73,7 +63,7 @@ async function cargarUbicaciones() {
     ruta.setLatLngs(puntosRuta);
 
     const ultimo = datos[datos.length - 1];
-    actualizarMapa(ultimo.latitud, ultimo.longitud, ultimo.timestamp);
+    actualizarMapa(ultimo.latitud, ultimo.longitud, ultimo.fecha, ultimo.hora);
     document.getElementById("totalPuntos").innerText = puntosRuta.length;
 
   } catch (error) {
@@ -81,7 +71,7 @@ async function cargarUbicaciones() {
   }
 }
 
-function actualizarMapa(lat, lng, timestamp, fecha, hora) {
+function actualizarMapa(lat, lng, fecha, hora) {
   const latlng = [lat, lng];
 
   marcador.setLatLng(latlng);
@@ -101,16 +91,14 @@ function actualizarMapa(lat, lng, timestamp, fecha, hora) {
 
   document.getElementById("latActual").innerText = lat.toFixed(6);
   document.getElementById("lngActual").innerText = lng.toFixed(6);
-  document.getElementById("timeActual").innerText = fecha && hora ? `${fecha} ${hora} UTC` : new Date(timestamp).toLocaleTimeString();
+  document.getElementById("timeActual").innerText = fecha && hora ? `${fecha} ${hora} UTC` : "--";
   document.getElementById("totalPuntos").innerText = puntosRuta.length;
 }
 
-// Simulación
 function iniciarSimulacion() {
   if (simInterval) return;
 
   simInterval = setInterval(async () => {
-    // Simular pequeño movimiento aleatorio
     latBase += (Math.random() - 0.5) * 0.0008;
     lngBase += (Math.random() - 0.5) * 0.0008;
 
@@ -161,9 +149,9 @@ async function descargarCSVGPS() {
       return;
     }
 
-    let csv = "Fecha,Latitud,Longitud\n";
+    let csv = "Fecha,Hora(UTC),Latitud,Longitud\n";
     datos.forEach(d => {
-      csv += `${new Date(d.timestamp).toLocaleString()},${d.latitud},${d.longitud}\n`;
+      csv += `${d.fecha || ""},${d.hora || ""},${d.latitud},${d.longitud}\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv" });
