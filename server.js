@@ -249,10 +249,10 @@ function iniciarMQTT() {
 
   if (topic === "casa/gps") {
   try {
-    const { latitud, longitud } = JSON.parse(msg);
-    const nueva = new Ubicacion({ latitud, longitud });
+    const { latitud, longitud, fecha, hora } = JSON.parse(msg);
+    const nueva = new Ubicacion({ latitud, longitud, fecha, hora });
     await nueva.save();
-    const evento = JSON.stringify({ tipo: "ubicacion", latitud, longitud, timestamp: new Date() });
+    const evento = JSON.stringify({ tipo: "ubicacion", latitud, longitud, fecha, hora, timestamp: new Date() });
     sseClients.forEach(client => client.write(`data: ${evento}\n\n`));
   } catch (error) {
     console.error("❌ Error guardando GPS:", error);

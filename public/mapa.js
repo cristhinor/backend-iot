@@ -48,9 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const eventSource = new EventSource(`${BACKEND}/api/stream`);
   eventSource.onmessage = (event) => {
     const dato = JSON.parse(event.data);
+    // En el SSE
     if (dato.tipo === "ubicacion") {
-      actualizarMapa(dato.latitud, dato.longitud, dato.timestamp);
+      actualizarMapa(dato.latitud, dato.longitud, dato.timestamp, dato.fecha, dato.hora);
     }
+
+// En cargarUbicaciones
+const ultimo = datos[datos.length - 1];
+actualizarMapa(ultimo.latitud, ultimo.longitud, ultimo.timestamp, ultimo.fecha, ultimo.hora);
   };
 });
 
@@ -76,7 +81,7 @@ async function cargarUbicaciones() {
   }
 }
 
-function actualizarMapa(lat, lng, timestamp) {
+function actualizarMapa(lat, lng, timestamp, fecha, hora) {
   const latlng = [lat, lng];
 
   marcador.setLatLng(latlng);
@@ -84,7 +89,8 @@ function actualizarMapa(lat, lng, timestamp) {
     <b>Posición actual</b><br>
     Lat: ${lat.toFixed(6)}<br>
     Lng: ${lng.toFixed(6)}<br>
-    ${new Date(timestamp).toLocaleTimeString()}
+    📅 ${fecha || "Sin fecha"}<br>
+    🕐 ${hora || "Sin hora"} (UTC)
   `);
 
   puntosRuta.push(latlng);
@@ -95,7 +101,7 @@ function actualizarMapa(lat, lng, timestamp) {
 
   document.getElementById("latActual").innerText = lat.toFixed(6);
   document.getElementById("lngActual").innerText = lng.toFixed(6);
-  document.getElementById("timeActual").innerText = new Date(timestamp).toLocaleTimeString();
+  document.getElementById("timeActual").innerText = fecha && hora ? `${fecha} ${hora} UTC` : new Date(timestamp).toLocaleTimeString();
   document.getElementById("totalPuntos").innerText = puntosRuta.length;
 }
 
