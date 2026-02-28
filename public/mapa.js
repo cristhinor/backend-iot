@@ -12,6 +12,7 @@ let viajeId = null;
 let marcadorInicio = null;
 let marcadorFin = null;
 let rutaViaje = null;
+let ultimoViajeId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   mapa = L.map("mapa").setView([latBase, lngBase], 15);
@@ -237,7 +238,7 @@ async function toggleViaje() {
 
       marcadorInicio = L.marker([gps.latitud, gps.longitud], { icon: iconoInicio })
         .addTo(mapa)
-        .bindPopup(`<b>🚗 Inicio del viaje</b><br>${gps.fecha} ${gps.hora} UTC`);
+        .bindPopup(`<b>🏍️ Inicio del viaje</b><br>${gps.fecha} ${gps.hora} UTC`);
 
     } catch (error) {
       alert("Error iniciando viaje");
@@ -258,9 +259,10 @@ async function toggleViaje() {
         })
       });
 
+      ultimoViajeId = viajeId;
       viajeActivo = false;
       viajeId = null;
-      btn.textContent = "🚗 Iniciar viaje";
+      btn.textContent = "🏍️ Iniciar viaje";
       btn.style.background = "";
 
       // Mostrar datos de fin
@@ -268,6 +270,16 @@ async function toggleViaje() {
       document.getElementById("viajeFinLng").innerText = `Lng: ${gps.longitud.toFixed(6)}`;
       document.getElementById("viajeFinFecha").innerText = `Fecha: ${gps.fecha || "--"}`;
       document.getElementById("viajeFinHora").innerText = `Hora: ${gps.hora || "--"} UTC`;
+
+      // Mostrar input de costo
+      document.getElementById("costoContainer").style.display = "flex";
+      document.getElementById("inputCosto").value = "";
+      document.getElementById("inputCosto").focus();
+
+      // Permitir Enter para guardar
+      document.getElementById("inputCosto").onkeydown = (e) => {
+        if (e.key === "Enter") guardarCosto();
+      };
 
       // Marcador de fin en mapa
       const iconoFin = L.divIcon({
@@ -309,4 +321,36 @@ async function toggleViaje() {
 
 async function descargarCSVViajes() {
   window.open(`${BACKEND}/api/viajes/csv`, "_blank");
+}
+
+async function guardarCosto() {
+  const input = document.getElementById("inputCosto");
+  const costo = parseFloat(input.value);
+
+  if (isNaN(costo) || costo < 0) {
+    alert("Ingresa un valor válido");
+    return;
+  }
+
+  try {
+    await fetch(`${BACKEND}/api/viaje/costo`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: ultimoViajeId, costo })
+    });
+
+    // Mostrar en el panel
+    const costoFormateado = new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: "COP",
+      minimumFractionDigits: 0
+    }).format(costo);
+
+    document.getElementById("viajeCostoPanel").style.display = "block";
+    document.getElementById("viajeCostoTexto").innerText = costoFormateado;
+    document.getElementById("costoContainer").style.display = "none";
+
+  } catch (error) {
+    alert("Error guardando costo");
+  }
 }

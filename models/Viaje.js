@@ -15,6 +15,7 @@ const viajeSchema = new mongoose.Schema({
     hora: String,
     timestamp: Date
   },
+  costo: { type: Number, default: null },
   completado: { type: Boolean, default: false }
 });
 

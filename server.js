@@ -224,15 +224,28 @@ app.get("/api/gps/ultimo", async (req, res) => {
   }
 });
 
+// Guardar costo del viaje
+app.post("/api/viaje/costo", async (req, res) => {
+  try {
+    const { id, costo } = req.body;
+    await Viaje.findByIdAndUpdate(id, { costo });
+    console.log("💵 Costo guardado:", costo);
+    res.json({ mensaje: "Costo guardado" });
+  } catch (error) {
+    res.status(500).json({ error: "Error guardando costo" });
+  }
+});
+
 // Descargar viajes en CSV
 app.get("/api/viajes/csv", async (req, res) => {
   try {
     const viajes = await Viaje.find({ completado: true }).sort({ "inicio.timestamp": -1 });
     
-    let csv = "Inicio Fecha,Inicio Hora,Inicio Lat,Inicio Lng,Fin Fecha,Fin Hora,Fin Lat,Fin Lng\n";
+    let csv = "Inicio Fecha,Inicio Hora,Inicio Lat,Inicio Lng,Fin Fecha,Fin Hora,Fin Lat,Fin Lng,Costo (COP)\n";
     viajes.forEach(v => {
       csv += `${v.inicio.fecha},${v.inicio.hora},${v.inicio.latitud},${v.inicio.longitud},`;
-      csv += `${v.fin.fecha},${v.fin.hora},${v.fin.latitud},${v.fin.longitud}\n`;
+      csv += `${v.fin.fecha},${v.fin.hora},${v.fin.latitud},${v.fin.longitud},`;
+      csv += `${v.costo !== null ? v.costo : ""}\n`;
     });
 
     res.setHeader("Content-Type", "text/csv");

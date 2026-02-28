@@ -83,7 +83,7 @@
   </div>
 
   <div class="card" id="panelViaje">
-    <h2>🚗 Viaje</h2>
+    <h2>🏍️ Viaje</h2>
     
     <div class="viaje-grid">
       <div class="viaje-punto">
@@ -100,11 +100,32 @@
         <p id="viajeFinFecha">Fecha: --</p>
         <p id="viajeFinHora">Hora: --</p>
       </div>
+      <div class="viaje-punto" id="viajeCostoPanel" style="display:none;">
+        <h3>💵 Valor</h3>
+        <p id="viajeCostoTexto">--</p>
+      </div>
     </div>
 
-    <div style="text-align: center; margin-top: 15px;">
+    <div style="text-align: center; margin-top: 15px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; align-items: center;">
       <button class="btn-sim" id="btnViaje" onclick="toggleViaje()">🚗 Iniciar viaje</button>
-      <button class="btn-sim" onclick="descargarCSVViajes()" style="background: #2ecc71;">⬇ Descargar viajes CSV</button>
+      <div id="costoContainer" style="display: none; align-items: center; gap: 8px;">
+        <input 
+          type="number" 
+          id="inputCosto" 
+          placeholder="¿Cuánto?" 
+          style="
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-primary);
+            font-size: 14px;
+            width: 130px;
+          "
+        />
+        <button class="btn-sim" onclick="guardarCosto()" style="background: #2ecc71;">✔ Guardar</button>
+      </div>
+      <button class="btn-sim" onclick="descargarCSVViajes()" style="background: #6c757d;">⬇ Descargar CSV</button>
     </div>
   </div>
 
@@ -122,7 +143,7 @@
         <button class="btn-sim" onclick="descargarCSVGPS()">⬇ Descargar CSV</button>
     </div>
   </div>
-
+  <!-- Botón hamburguesa
   <div class="card">
     <h2>🧪 Simulación GPS</h2>
     <p style="color: var(--text-primary); opacity: 0.7; font-size: 13px;">
@@ -134,6 +155,7 @@
       <button class="btn-sim" onclick="limpiarRuta()">🗑 Limpiar ruta</button>
     </div>
   </div>
+  -->
 
 </div>
 
