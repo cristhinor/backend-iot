@@ -6,6 +6,7 @@ const cors = require("cors");
 
 const Consumo = require("./models/Consumo");
 const Ubicacion = require("./models/Ubicacion");
+const Viaje = require("./models/Viaje");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -179,6 +180,66 @@ app.get("/api/ubicaciones/rango", async (req, res) => {
     res.json(ubicaciones);
   } catch (error) {
     res.status(500).json({ error: "Error obteniendo rango GPS" });
+  }
+});
+
+// Iniciar viaje
+app.post("/api/viaje/iniciar", async (req, res) => {
+  try {
+    const { latitud, longitud, fecha, hora } = req.body;
+    const viaje = new Viaje({
+      inicio: { latitud, longitud, fecha, hora }
+    });
+    await viaje.save();
+    console.log("🚗 Viaje iniciado");
+    res.json({ mensaje: "Viaje iniciado", id: viaje._id });
+  } catch (error) {
+    res.status(500).json({ error: "Error iniciando viaje" });
+  }
+});
+
+// Terminar viaje
+app.post("/api/viaje/terminar", async (req, res) => {
+  try {
+    const { id, latitud, longitud, fecha, hora } = req.body;
+    const viaje = await Viaje.findByIdAndUpdate(id, {
+      fin: { latitud, longitud, fecha, hora, timestamp: new Date() },
+      completado: true
+    }, { new: true });
+    console.log("🏁 Viaje terminado");
+    res.json({ mensaje: "Viaje terminado", viaje });
+  } catch (error) {
+    res.status(500).json({ error: "Error terminando viaje" });
+  }
+});
+
+// Obtener último dato GPS del ESP32
+app.get("/api/gps/ultimo", async (req, res) => {
+  try {
+    const ultimo = await Ubicacion.findOne().sort({ timestamp: -1 });
+    if (!ultimo) return res.status(404).json({ error: "Sin datos GPS" });
+    res.json(ultimo);
+  } catch (error) {
+    res.status(500).json({ error: "Error obteniendo GPS" });
+  }
+});
+
+// Descargar viajes en CSV
+app.get("/api/viajes/csv", async (req, res) => {
+  try {
+    const viajes = await Viaje.find({ completado: true }).sort({ "inicio.timestamp": -1 });
+    
+    let csv = "Inicio Fecha,Inicio Hora,Inicio Lat,Inicio Lng,Fin Fecha,Fin Hora,Fin Lat,Fin Lng\n";
+    viajes.forEach(v => {
+      csv += `${v.inicio.fecha},${v.inicio.hora},${v.inicio.latitud},${v.inicio.longitud},`;
+      csv += `${v.fin.fecha},${v.fin.hora},${v.fin.latitud},${v.fin.longitud}\n`;
+    });
+
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", "attachment; filename=viajes.csv");
+    res.send(csv);
+  } catch (error) {
+    res.status(500).json({ error: "Error generando CSV" });
   }
 });
 

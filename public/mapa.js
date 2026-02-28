@@ -7,6 +7,12 @@ let mapa, marcador, ruta;
 let simInterval = null;
 let puntosRuta = [];
 
+let viajeActivo = false;
+let viajeId = null;
+let marcadorInicio = null;
+let marcadorFin = null;
+let rutaViaje = null;
+
 document.addEventListener("DOMContentLoaded", () => {
   mapa = L.map("mapa").setView([latBase, lngBase], 15);
 
@@ -165,4 +171,142 @@ async function descargarCSVGPS() {
   } catch (error) {
     console.error("Error descargando CSV GPS:", error);
   }
+}
+
+async function toggleViaje() {
+  const btn = document.getElementById("btnViaje");
+
+  // Leer última posición del ESP32
+  let gps;
+  try {
+    const res = await fetch(`${BACKEND}/api/gps/ultimo`);
+    gps = await res.json();
+  } catch (error) {
+    alert("No se pudo obtener la posición del GPS");
+    return;
+  }
+
+  if (!viajeActivo) {
+    // INICIAR VIAJE
+    try {
+      const res = await fetch(`${BACKEND}/api/viaje/iniciar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          latitud: gps.latitud,
+          longitud: gps.longitud,
+          fecha: gps.fecha,
+          hora: gps.hora
+        })
+      });
+      const data = await res.json();
+      viajeId = data.id;
+      viajeActivo = true;
+      btn.textContent = "🏁 Terminar viaje";
+      btn.style.background = "#e74c3c";
+
+      // Mostrar datos de inicio
+      document.getElementById("viajeInicioLat").innerText = `Lat: ${gps.latitud.toFixed(6)}`;
+      document.getElementById("viajeInicioLng").innerText = `Lng: ${gps.longitud.toFixed(6)}`;
+      document.getElementById("viajeInicioFecha").innerText = `Fecha: ${gps.fecha || "--"}`;
+      document.getElementById("viajeInicioHora").innerText = `Hora: ${gps.hora || "--"} UTC`;
+
+      // Limpiar fin
+      document.getElementById("viajeFinLat").innerText = "Lat: --";
+      document.getElementById("viajeFinLng").innerText = "Lng: --";
+      document.getElementById("viajeFinFecha").innerText = "Fecha: --";
+      document.getElementById("viajeFinHora").innerText = "Hora: --";
+
+      // Marcador de inicio en mapa
+      if (marcadorInicio) mapa.removeLayer(marcadorInicio);
+      if (marcadorFin) mapa.removeLayer(marcadorFin);
+      if (rutaViaje) mapa.removeLayer(rutaViaje);
+
+      const iconoInicio = L.divIcon({
+        className: "",
+        html: `<div style="
+          width: 16px; height: 16px;
+          background: #2ecc71;
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(46,204,113,0.8);
+        "></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+
+      marcadorInicio = L.marker([gps.latitud, gps.longitud], { icon: iconoInicio })
+        .addTo(mapa)
+        .bindPopup(`<b>🚗 Inicio del viaje</b><br>${gps.fecha} ${gps.hora} UTC`);
+
+    } catch (error) {
+      alert("Error iniciando viaje");
+    }
+
+  } else {
+    // TERMINAR VIAJE
+    try {
+      await fetch(`${BACKEND}/api/viaje/terminar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: viajeId,
+          latitud: gps.latitud,
+          longitud: gps.longitud,
+          fecha: gps.fecha,
+          hora: gps.hora
+        })
+      });
+
+      viajeActivo = false;
+      viajeId = null;
+      btn.textContent = "🚗 Iniciar viaje";
+      btn.style.background = "";
+
+      // Mostrar datos de fin
+      document.getElementById("viajeFinLat").innerText = `Lat: ${gps.latitud.toFixed(6)}`;
+      document.getElementById("viajeFinLng").innerText = `Lng: ${gps.longitud.toFixed(6)}`;
+      document.getElementById("viajeFinFecha").innerText = `Fecha: ${gps.fecha || "--"}`;
+      document.getElementById("viajeFinHora").innerText = `Hora: ${gps.hora || "--"} UTC`;
+
+      // Marcador de fin en mapa
+      const iconoFin = L.divIcon({
+        className: "",
+        html: `<div style="
+          width: 16px; height: 16px;
+          background: #e74c3c;
+          border: 3px solid white;
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(231,76,60,0.8);
+        "></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8]
+      });
+
+      marcadorFin = L.marker([gps.latitud, gps.longitud], { icon: iconoFin })
+        .addTo(mapa)
+        .bindPopup(`<b>🏁 Fin del viaje</b><br>${gps.fecha} ${gps.hora} UTC`);
+
+      // Trazar ruta entre inicio y fin
+      const inicioLatLng = marcadorInicio.getLatLng();
+      rutaViaje = L.polyline([
+        [inicioLatLng.lat, inicioLatLng.lng],
+        [gps.latitud, gps.longitud]
+      ], {
+        color: "#e74c3c",
+        weight: 4,
+        opacity: 0.8
+      }).addTo(mapa);
+
+      // Ajustar vista para ver toda la ruta
+      mapa.fitBounds(rutaViaje.getBounds(), { padding: [50, 50] });
+
+    } catch (error) {
+      alert("Error terminando viaje");
+    }
+  }
+}
+
+async function descargarCSVViajes() {
+  window.open(`${BACKEND}/api/viajes/csv`, "_blank");
 }

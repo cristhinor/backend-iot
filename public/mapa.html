@@ -82,6 +82,32 @@
     </div>
   </div>
 
+  <div class="card" id="panelViaje">
+    <h2>🚗 Viaje</h2>
+    
+    <div class="viaje-grid">
+      <div class="viaje-punto">
+        <h3>📍 Inicio</h3>
+        <p id="viajeInicioLat">Lat: --</p>
+        <p id="viajeInicioLng">Lng: --</p>
+        <p id="viajeInicioFecha">Fecha: --</p>
+        <p id="viajeInicioHora">Hora: --</p>
+      </div>
+      <div class="viaje-punto">
+        <h3>🏁 Fin</h3>
+        <p id="viajeFinLat">Lat: --</p>
+        <p id="viajeFinLng">Lng: --</p>
+        <p id="viajeFinFecha">Fecha: --</p>
+        <p id="viajeFinHora">Hora: --</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 15px;">
+      <button class="btn-sim" id="btnViaje" onclick="toggleViaje()">🚗 Iniciar viaje</button>
+      <button class="btn-sim" onclick="descargarCSVViajes()" style="background: #2ecc71;">⬇ Descargar viajes CSV</button>
+    </div>
+  </div>
+
   <div class="card">
     <h2>📥 Descargar historial GPS</h2>
     <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; align-items: center;">
