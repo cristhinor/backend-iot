@@ -220,6 +220,8 @@ function iniciarMQTT() {
       }
     });
 
+    mqttClient.subscribe("casa/gps");
+
   });
 
   mqttClient.on("message", async (topic, message) => {
@@ -244,6 +246,19 @@ function iniciarMQTT() {
       console.error("❌ Error guardando consumo:", error);
     }
   }
+
+  if (topic === "casa/gps") {
+  try {
+    const { latitud, longitud } = JSON.parse(msg);
+    const nueva = new Ubicacion({ latitud, longitud });
+    await nueva.save();
+    const evento = JSON.stringify({ tipo: "ubicacion", latitud, longitud, timestamp: new Date() });
+    sseClients.forEach(client => client.write(`data: ${evento}\n\n`));
+  } catch (error) {
+    console.error("❌ Error guardando GPS:", error);
+  }
+  return;
+}
 });
 
   mqttClient.on("error", (err) => {
