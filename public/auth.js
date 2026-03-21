@@ -1,4 +1,4 @@
-const BACKEND = "https://backend-iot-mb58.onrender.com";
+var BACKEND = "https://backend-iot-mb58.onrender.com";
 
 function verificarSesion(rolesPermitidos = []) {
   const token = sessionStorage.getItem("token");
