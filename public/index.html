@@ -13,7 +13,11 @@
 
   <div class="topbar">
     <h1>Panel IoT - Control de Consumo</h1>
-    <button id="theme-toggle" class="theme-btn">🌙</button>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span id="nombreUsuario" style="font-size: 14px; opacity: 0.7;"></span>
+      <button id="theme-toggle" class="theme-btn">🌙</button>
+      <button onclick="cerrarSesion()" class="theme-btn" title="Cerrar sesión">🚪</button>
+    </div>
   </div>
 
   <!-- Botón hamburguesa -->
@@ -60,6 +64,7 @@ function toggleMenu() {
 }
 </script>
 
+<script src="auth.js"></script>
 <script src="tema.js"></script>
 <script src="script.js"></script>
 

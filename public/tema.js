@@ -27,4 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const toggle = document.getElementById("theme-toggle");
   if (toggle) toggle.addEventListener("click", toggleTema);
+
+  const nombreEl = document.getElementById("nombreUsuario");
+  if (nombreEl) {
+    nombreEl.innerText = obtenerNombre() || "";
+  }
+
 });

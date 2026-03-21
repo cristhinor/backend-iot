@@ -15,6 +15,7 @@ let rutaViaje = null;
 let ultimoViajeId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  if (!verificarSesion(["admin", "conductor", "visualizador"])) return;
   mapa = L.map("mapa").setView([latBase, lngBase], 15);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {

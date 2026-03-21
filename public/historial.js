@@ -1,32 +1,36 @@
 let datosFiltrados = [];
 let grafica;
 
-const ctx = document.getElementById("graficaHistorial").getContext("2d");
+document.addEventListener("DOMContentLoaded", () => {
+  if (!verificarSesion(["admin", "visualizador"])) return;
 
-grafica = new Chart(ctx, {
-  type: "line",
-  data: {
-    labels: [],
-    datasets: [{
-      label: "Consumo",
-      data: [],
-      borderWidth: 2
-    }]
-  }
+  const ctx = document.getElementById("graficaHistorial").getContext("2d");
+
+  grafica = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [{
+        label: "Consumo",
+        data: [],
+        borderWidth: 2
+      }]
+    }
+  });
 });
 
 async function filtrar() {
   const inicio = document.getElementById("fechaInicio").value;
   const fin = document.getElementById("fechaFin").value;
 
-  if(!inicio || !fin) {
+  if (!inicio || !fin) {
     alert("Selecciona ambas fechas");
     return;
   }
 
   const res = await fetch(
-  `https://backend-iot-mb58.onrender.com/api/consumos/rango?inicio=${inicio}&fin=${fin}`
-);
+    `https://backend-iot-mb58.onrender.com/api/consumos/rango?inicio=${inicio}&fin=${fin}`
+  );
 
   datosFiltrados = await res.json();
 
@@ -42,8 +46,7 @@ async function filtrar() {
 }
 
 function descargarCSV() {
-
-  if(datosFiltrados.length === 0){
+  if (datosFiltrados.length === 0) {
     alert("No hay datos para descargar");
     return;
   }

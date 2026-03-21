@@ -1,11 +1,3 @@
-// 🔹 CONFIGURA TUS DATOS
-//const options = {
-//  username: "admin-cris",
-//  password: "11Ismyreligion"
-//};
-
-//const client = mqtt.connect("wss://816ed507f62b44af8b039c313433755e.s1.eu.hivemq.cloud:8884/mqtt", options);
-
 let estadoLED = false;
 let datosConsumo = [];
 let etiquetasTiempo = [];
@@ -222,6 +214,7 @@ async function cargarHistorico() {
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  if (!verificarSesion(["admin", "visualizador"])) return;
   cargarHistorico();
   cargarEstadoLED();
 

@@ -4,6 +4,10 @@ const mongoose = require("mongoose");
 const mqtt = require("mqtt");
 const cors = require("cors");
 
+const jwt = require("jsonwebtoken");
+const Usuario = require("./models/Usuario");
+const { verificarToken, soloRoles } = require("./middleware/auth");
+
 const Consumo = require("./models/Consumo");
 const Ubicacion = require("./models/Ubicacion");
 const Viaje = require("./models/Viaje");
@@ -57,6 +61,74 @@ async function conectarMongo() {
 ================================ */
 
 function iniciarServidor() {
+
+  // Login
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      const usuario = await Usuario.findOne({ email });
+      if (!usuario) {
+        return res.status(401).json({ error: "Credenciales incorrectas" });
+      }
+
+      const passwordValida = await usuario.verificarPassword(password);
+      if (!passwordValida) {
+        return res.status(401).json({ error: "Credenciales incorrectas" });
+      }
+
+      const token = jwt.sign(
+        { id: usuario._id, nombre: usuario.nombre, email: usuario.email, rol: usuario.rol },
+        process.env.JWT_SECRET,
+        { expiresIn: "8h" }
+      );
+
+      res.json({ token, nombre: usuario.nombre, rol: usuario.rol });
+
+    } catch (error) {
+      res.status(500).json({ error: "Error en el login" });
+    }
+  });
+
+  // Crear usuario (solo admin)
+  app.post("/api/usuarios", verificarToken, soloRoles("admin"), async (req, res) => {
+    try {
+      const { nombre, email, password, rol } = req.body;
+
+      const existente = await Usuario.findOne({ email });
+      if (existente) {
+        return res.status(400).json({ error: "El email ya está registrado" });
+      }
+
+      const usuario = new Usuario({ nombre, email, password, rol });
+      await usuario.save();
+
+      res.json({ mensaje: "Usuario creado correctamente", usuario: { nombre, email, rol } });
+
+    } catch (error) {
+      res.status(500).json({ error: "Error creando usuario" });
+    }
+  });
+
+  // Obtener usuarios (solo admin)
+  app.get("/api/usuarios", verificarToken, soloRoles("admin"), async (req, res) => {
+    try {
+      const usuarios = await Usuario.find().select("-password");
+      res.json(usuarios);
+    } catch (error) {
+      res.status(500).json({ error: "Error obteniendo usuarios" });
+    }
+  });
+
+  // Eliminar usuario (solo admin)
+  app.delete("/api/usuarios/:id", verificarToken, soloRoles("admin"), async (req, res) => {
+    try {
+      await Usuario.findByIdAndDelete(req.params.id);
+      res.json({ mensaje: "Usuario eliminado" });
+    } catch (error) {
+      res.status(500).json({ error: "Error eliminando usuario" });
+    }
+  });
 
   // Guardar clientes SSE conectados
   app.get("/api/stream", (req, res) => {
