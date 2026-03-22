@@ -16,6 +16,19 @@ let ultimoViajeId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   if (!verificarSesion(["admin", "conductor", "visualizador"])) return;
+
+  // Ocultar elementos según rol
+  const rol = obtenerRol();
+
+  if (rol === "conductor") {
+    const btnVolver = document.querySelector(".historial-nav");
+    if (btnVolver) btnVolver.style.display = "none";
+  }
+
+  if (rol === "visualizador") {
+    document.getElementById("panelViaje").style.display = "none";
+  }
+
   mapa = L.map("mapa").setView([latBase, lngBase], 15);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {

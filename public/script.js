@@ -215,6 +215,17 @@ async function cargarHistorico() {
 document.addEventListener("DOMContentLoaded", () => {
 
   if (!verificarSesion(["admin", "visualizador"])) return;
+
+  const rol = obtenerRol();
+
+  if (rol === "visualizador") {
+    document.getElementById("toggleBtn").style.display = "none";
+    document.getElementById("ledIndicador").style.display = "none";
+    document.getElementById("estadoTexto").style.display = "none";
+    document.querySelector(".card.control").style.display = "none";
+  }
+
+
   cargarHistorico();
   cargarEstadoLED();
 
